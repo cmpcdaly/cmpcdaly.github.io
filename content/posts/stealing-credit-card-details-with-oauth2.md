@@ -23,7 +23,7 @@ The login flow seems typical at first glance; it mostly follows the OIDC flow us
 ## The Attack
 The URL in step two looks something like this (details omitted):
 
-`https://login.company.co.uk/oauth2/v2.0/authorize?client_id=xxx&scope=openid%20profile&redirect_uri=https%3A%2F%2Fwww.company.co.uk%2Fcallback&response_type=code&client_info=1&code_challenge=xxx&code_challenge_method=S256&state=%7B%22redirect_uri%22%3A%22https%3A%2F%2Fcompany.co.uk%2Fclothing%2Ft-shirts%22%7D`
+> https://login.company.co.uk/oauth2/v2.0/authorize?client_id=xxx&scope=openid%20profile&redirect_uri=https%3A%2F%2Fwww.company.co.uk%2Fcallback&response_type=code&client_info=1&code_challenge=xxx&code_challenge_method=S256&state=%7B%22redirect_uri%22%3A%22https%3A%2F%2Fcompany.co.uk%2Fclothing%2Ft-shirts%22%7D
 
 If you take a closer look at the `state` parameter:
 
@@ -39,7 +39,7 @@ In the OAuth2 standard, the `redirect_uri` provided to the authorization server 
 
 I discovered that crafting my own object by replacing the `redirect_uri` with my blog domain, URI encoding the object and replacing it in the login URL would redirect me to https://mostlyinaccurate.com with a login URL like this:
 
-`https://login.company.co.uk/oauth2/v2.0/authorize?client_id=xxx&scope=openid%20profile&redirect_uri=https%3A%2F%2Fwww.company.co.uk%2Fcallback&response_type=code&client_info=1&code_challenge=xxx&code_challenge_method=S256&state=%7B%22redirect_uri%22%3A%22https%3A%2F%2Fmostlyinaccurate.com%22%7D`
+> https://login.company.co.uk/oauth2/v2.0/authorize?client_id=xxx&scope=openid%20profile&redirect_uri=https%3A%2F%2Fwww.company.co.uk%2Fcallback&response_type=code&client_info=1&code_challenge=xxx&code_challenge_method=S256&state=%7B%22redirect_uri%22%3A%22https%3A%2F%2Fmostlyinaccurate.com%22%7D
 
 Not only does this mean that the `state` isn't being bound to my client (mistake number two), but the login callback URL allows me to redirect the end-user to any URL I like (mistake number three)!
 
@@ -62,7 +62,7 @@ In practice, this might mean that the opaque `state` parameter we generate at th
 
 > PKCE (originally developed for public OAuth Clients) can also help to prevent other attacks like authorization code injection, even for non-public clients.
 
-## Mistake Number Three: Trusting the State
+## Mistake Number Three: Trusting the State
 At the end of the day, the `state` parameter returned in an OAuth callback request is input from a third party - and shouldn't be trusted. In this case, the input was a redirect URL - and an assumption was made that the URL could be trusted. The CWE that the business fell victim to is known as an [Open Redirect](https://cwe.mitre.org/data/definitions/601.html) - whereby an input parameter is used to redirect a request to an arbitrary URL.
 
 The mitigation advice for open redirect attacks is to assume all input is malicious - which is a useful mindset to have when handling any input parameter of the OAuth2 flow. In this case the attack could be mitigated using an 'allow list' of acceptable URLs - only allowing redirects to a set of URLs on the `company.co.uk` domain. This should be an absolute list of URLs if possible - pattern matching/parsing can still be vulnerable to injection attacks, but equality comparisons not so much!
