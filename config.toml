@@ -2,6 +2,7 @@ baseURL = 'https://mostlyinaccurate.com/'
 languageCode = 'en-gb'
 title = 'Mostly Inaccurate'
 theme = "hugo-blog-awesome"
+googleAnalytics = "G-YFZ8EN2G8W"
 
 # This defines how dates are formatted
 defaultContentLanguage = "en-gb"
